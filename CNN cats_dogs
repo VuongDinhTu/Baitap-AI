@@ -1,0 +1,119 @@
+s.	Tải model
+pip install mtcnn
+t.	Thêm thư viện 
+from keras.datasets               import cifar100
+from keras.utils                     import np_utils
+from keras.models                import Sequential
+from keras.layers                  import Dense, Activation, BatchNormalization, Dropout, LSTM
+from keras.layers                 import Conv2D
+from keras.layers                 import MaxPooling2D
+from keras.layers                 import Flatten
+from keras.callbacks            import EarlyStopping 
+from tensorflow.keras.optimizers  import SGD
+import matplotlib.pyplot as plt
+import numpy as np
+from mtcnn                       	 import MTCNN
+from matplotlib.image                import imread
+from os 				 import listdir
+from numpy 			 import asarray
+from numpy				 import save
+from keras.preprocessing.image import load_img,img_to_array
+u.	Kết nối driver
+from google.colab import drive
+drive.mount('/content/drive')
+v.	Tạo list
+from matplotlib import image
+folder='/content/drive/MyDrive/cats_dogs_datasets/train_1/'
+for i in range(9):
+    plt.subplot(330+i+1)
+    filename= folder+'cats/' +'cat.'+ str(i)+'.jpg'
+    image=imread(filename)
+    plt.imshow(image)
+plt.show()
+ 
+
+from matplotlib import image
+folder='/content/drive/MyDrive/cats_dogs_datasets/train_1/'
+for i in range(9):
+    plt.subplot(330+i+1)
+    filename= folder+'dogs/'+'dog.'+ str(i)+'.jpg'
+    image=imread(filename)
+    plt.imshow(image)
+plt.show()
+ 
+w.	Tạo dữ liệu & xử lý dữ liệu
+from numpy.lib.npyio import load
+folder='/content/drive/MyDrive/train/cats/'
+photos,labels=list(),list()
+for file in listdir(folder):
+    output=0.
+    if file.startswith('cat'):
+        output=1.0
+    photo=load_img(folder+file,target_size=(200,200))
+    photo=img_to_array(photo)
+    photos.append(photo)
+    labels.append(output)
+photos=asarray(photos)
+labels=asarray(labels)
+print(photos.shape,labels.shape)
+save('dog_vs_cat_photos.npy',photos)
+save('dog_vs_cat_photos.npy',labels)
+
+people = ['cats','dogs']
+dir_train = '/content/drive/MyDrive/train' 
+distpath = []
+y_train = []
+x_train = []
+x_test = []
+y_test = []
+
+x.	Tạo dữ liệu & xử lý dữ liệu
+def create_data(dir, x_train, y_train):
+  for i in people:
+    path = os.path.join(dir,i)
+    index_label = people.index(i)
+    for j in os.listdir(path):
+      img_path = os.path.join(path, j)
+      img = image.load_img(img_path, target_size=(200,200)) 
+      img = img_to_array(img)
+      img = img.reshape(200,200,3) 
+      img = img.astype('float32')
+      img = img/255
+      x_train.append(img)
+      y_train.append(index_label)
+create_data(dir_train, x_train, y_train) 
+
+x_train = np.array(x_train)
+y_train = np.array(y_train)
+y_train = np_utils.to_categorical(y_train)
+print(x_train.shape)
+print(y_train.shape)
+
+y.	Tạo model & compile
+model=Sequential()
+model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same', input_shape=(200, 200, 3))) 
+model.add(MaxPooling2D((2, 2)))
+model.add(Flatten())
+model.add(Dense(128, activation='relu', kernel_initializer='he_uniform')) 
+model.add(Dense(2, activation='sigmoid'))
+opt=SGD(learning_rate=0.01,momentum=0.9)
+model.compile(loss='binary_crossentropy',optimizer=opt, metrics=['accuracy'])
+history = model.fit(x_train,y_train,epochs = 20)
+
+63/63 [==============================] - 2s 32ms/step - loss: 0.0011 - accuracy: 1.0000
+Epoch 17/20
+63/63 [==============================] - 2s 33ms/step - loss: 0.0010 - accuracy: 1.0000
+Epoch 18/20
+63/63 [==============================] - 2s 33ms/step - loss: 9.1663e-04 - accuracy: 1.0000
+Epoch 19/20
+63/63 [==============================] - 2s 33ms/step - loss: 8.5153e-04 - accuracy: 1.0000
+Epoch 20/20
+63/63 [==============================] - 2s 33ms/step - loss: 7.7741e-04 - accuracy: 1.0000
+z.	Tiên đoán ảnh 
+pic = image.load_img('cat.jpg', target_size=(200,200)) # độ phân giải tùy ae chọn nhé!
+plt.imshow(pic)
+pic = img_to_array(pic)
+pic = pic.reshape(1,200,200,3) 
+pic = pic.astype('float32')
+pic = pic/255
+np.argmax(model.predict(pic), axis=1)
